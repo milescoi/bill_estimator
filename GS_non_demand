@@ -1,0 +1,42 @@
+#define meter column name
+y_label = 'MT_008'
+
+#beginning with example data from prior testing 
+structured_data = pd.DataFrame(filtered_df[y_label].copy()) 
+
+#define bill cycle begin and end
+period_begin = '2014-10-01 00:00:00'
+period_end = '2014-11-01 00:00:00'
+
+
+## History until Novemeber 2014 - used for Train
+mt_train = structured_data.loc[structured_data.index < period_begin].copy()
+
+
+## November for model test 
+mt_test = structured_data.loc[(structured_data.index >= period_begin) & (structured_data.index < period_end) ].copy()
+
+
+#bill estimator function (the data should be in kWh to estimate cost, function returns a list with variable cost data frame and total cost)
+def bill_estimate_GS(df_in, label, metered):
+    df = pd.DataFrame(df_in.copy()) 
+    meter_charge = 18.14
+    unmeter_charge = 15.12
+    ED_charge = 0.05412
+    fuel_charge = 0.02719
+    energy_con_charge = 0.00292
+    capacity_charge = 0.00086
+    envir_charge = 0.00221
+    fl_sales_charge = 1.025641
+    df['GS_var_cost'] = df[y_label]*ED_charge + df[y_label]*fuel_charge + df[y_label]*energy_con_charge + df[y_label]*capacity_charge + df[y_label]*fl_sales_charge
+    tot = np.sum(df['GS_var_cost'])*fl_sales_charge
+    if metered == True:
+        total = tot + meter_charge
+    else:
+        total = tot + unmeter_charge
+    return df, total
+
+aaa = bill_estimate_GS(mt_test, y_label, True)
+
+print(aaa[1])
+print(aaa[0])
